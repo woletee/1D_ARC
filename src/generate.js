@@ -20,7 +20,7 @@ function Generate() {
 
     return (
         <div className="generate-container">
-            <h1>Generated Output from Flask</h1>
+            <h1>Generated 1D</h1>
             <button onClick={handleSubmit}>Generate Output</button>
             {generatedData && (
                 <div>
