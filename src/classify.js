@@ -1,73 +1,82 @@
-import React, { useState } from "react";
-import "./classify.css";
-import GridVisualization from "./GridVisualization";
-import Function from "./rules"; // Import the Function component
+import React, { useState } from 'react';
+import './classify.css';
+import axios from 'axios';
 
 function Classify() {
-  const [fileData, setFileData] = useState("");
-  const [classification, setClassification] = useState("");
-  const [jsonData, setJsonData] = useState(null);
-  const [fileName, setFileName] = useState("");
+    const [inputData, setInputData] = useState(''); // Store input data as a string
+    const [outputData, setOutputData] = useState(''); // Store output data as a string
+    const [classification, setClassification] = useState(''); // Store the predicted class name
 
-  const handleFileChange = (event) => {
-    const file = event.target.files[0];
-    if (file && file.type === "application/json") {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setFileData(e.target.result);
-        console.log("File Data Loaded:", e.target.result);
-        try {
-          const parsedData = JSON.parse(e.target.result);
-          setJsonData(parsedData);
-          setFileName(file.name);
-        } catch (error) {
-          console.error("Error parsing JSON:", error);
-          setJsonData(null);
-          setFileName("");
-        }
-      };
-      reader.readAsText(file);
-    } else {
-      alert("Please upload a valid JSON file.");
-    }
+    // Handle changes in the Input textarea
+    const handleInputChange = (event) => {
+        setInputData(event.target.value);
+    };
+
+    // Handle changes in the Output textarea
+    const handleOutputChange = (event) => {
+        setOutputData(event.target.value);
+    };
+
+    const handleSubmit = async (event) => {
+      event.preventDefault();
+  
+      try {
+          // Parse the input and output fields to arrays
+          const inputArray = JSON.parse(inputData);
+          const outputArray = JSON.parse(outputData);
+  
+          // Prepare data to send to the backend
+          const dataToSend = {
+              Input: inputArray,
+              Output: outputArray
+          };
+  
+          // Send data to the backend for classification
+          const response = await axios.post('http://localhost:5000/classify', dataToSend, {
+              headers: { 'Content-Type': 'application/json' }
+          });
+  
+          // Display the predicted class from the response
+          setClassification(response.data.predicted_class || 'No suitable class found');
+      } catch (error) {
+          // Log the error and set a more descriptive error message
+          console.error('Error during classification:', error.response ? error.response.data : error.message);
+          setClassification(`Error predicting class: ${error.response ? error.response.data : error.message}`);
+      }
   };
+  
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    console.log("File Data Submitted:", fileData);
-    if (jsonData) {
-      const classificationIsCorrect = Function.checkClassification(jsonData);
-      setClassification(classificationIsCorrect ? "correct" : "incorrect");
-    } else {
-      alert("Please upload a JSON file first.");
-    }
-  };
-
-  return (
-    <div className="classify-container">
-      <h1>Classify JSON Data</h1>
-      <form onSubmit={handleSubmit}>
-        <label htmlFor="fileInput">Upload JSON File:</label>
-        <input
-          id="fileInput"
-          type="file"
-          accept=".json,application/json"
-          onChange={handleFileChange}
-          aria-label="Upload JSON file for classification"
-        />
-        {jsonData && (
-          <div>
-            <h2>{fileName}</h2>
-            <GridVisualization data={jsonData.train[0].input} /> {/* Adjust this based on your JSON structure */}
-          </div>
-        )}
-        <button type="submit" className="classify-button">
-          Classify
-        </button>
-      </form>
-      <p>Classification: {classification}</p>
-    </div>
-  );
+    return (
+        <div className="classify-container">
+            <h1>Classify JSON Data</h1>
+            <form onSubmit={handleSubmit}>
+                <label htmlFor="inputData">Input Data (JSON array format):</label>
+                <textarea
+                    id="inputData"
+                    value={inputData}
+                    onChange={handleInputChange}
+                    placeholder="[5, 5, 5, 5, 5, 5, 0, 0, 0, 0]" // Example placeholder
+                    rows="3"
+                    cols="50"
+                />
+                <br />
+                <label htmlFor="outputData">Output Data (JSON array format):</label>
+                <textarea
+                    id="outputData"
+                    value={outputData}
+                    onChange={handleOutputChange}
+                    placeholder="[5, 0, 0, 0, 0, 5, 0, 0, 0, 0]" // Example placeholder
+                    rows="3"
+                    cols="50"
+                />
+                <br />
+                <button type="submit" className="classify-button">
+                    Classify
+                </button>
+            </form>
+            <p>Predicted Class: {classification}</p> {/* Display the predicted class */}
+        </div>
+    );
 }
 
 export default Classify;

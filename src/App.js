@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Navbar from "./Navbar";
 import Classify from "./classify";
+import Generate from "./generate";
 
 function App() {
   const [activeTab, setActiveTab] = useState("Classify"); // Default tab
@@ -14,7 +15,7 @@ function App() {
     <div className="App">
       <Navbar onTabClick={handleTabClick} />
       {activeTab === "Classify" && <Classify />}
-      {activeTab === "Generate" && <div>Generate tab content here.</div>}
+      {activeTab === "Generate" && <Generate />}
       {activeTab === "Get output" && (
         <div>Output results will be shown here.</div>
       )}
